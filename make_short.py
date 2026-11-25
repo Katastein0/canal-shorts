@@ -2,7 +2,7 @@
 
 Uso:  python make_short.py episodios/2026-11-25.json
 
-El JSON tiene: slug, title, description, tags, voice (opcional), rate (opcional)
+El JSON tiene: slug, title, description, tags, voice/rate/style (opcionales)
 y "segments": [{"text": "...narración...", "image": "prompt en inglés"}, ...]
 
 Salida en salida/<slug>/: short.mp4, metadata.txt, guion.txt
@@ -46,8 +46,8 @@ async def tts(text, voice, rate, out):
     return words
 
 
-def fetch_image(prompt, seed, out):
-    url = ("https://image.pollinations.ai/prompt/" + urllib.parse.quote(prompt + STYLE)
+def fetch_image(prompt, seed, out, style=STYLE):
+    url = ("https://image.pollinations.ai/prompt/" + urllib.parse.quote(prompt + style)
            + f"?width=1080&height=1920&nologo=true&seed={seed}")
     for attempt in range(6):
         try:
@@ -126,7 +126,7 @@ def main(ep_path):
         words = asyncio.run(tts(s["text"], voice, rate, audio))
         img = tmp / f"img_{i:02d}.jpg"
         if not img.exists():
-            fetch_image(s["image"], 1000 + i, img)
+            fetch_image(s["image"], 1000 + i, img, ep.get("style", STYLE))
         segs.append(build_segment(i, img, audio, words, tmp))
     lst = tmp / "lista.txt"
     lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in segs), encoding="utf-8")

@@ -1,5 +1,6 @@
 salida/
 __pycache__/
 client_secret*.json
-credenciales_youtube.txt
+credenciales_youtube*.txt
 token*.json
+web/
