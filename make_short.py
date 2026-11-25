@@ -4,7 +4,8 @@ Uso:  python make_short.py episodios/2026-11-25-slug.json
 
 El JSON tiene: slug, title, description, tags, segments y, opcionales:
   formato  "vertical" (por defecto, Short) u "horizontal" (vídeo largo 16:9)
-  voice, rate, style   (voz edge-tts, velocidad, estilo de imagen)
+  voice, rate, style   (voz edge-tts, velocidad [por defecto +20%], estilo de imagen)
+  music                "oscura" o "epica" (por defecto epica en episodios_civ/, si no oscura)
   thumb_text           texto grande de la miniatura (solo horizontal)
 "segments": [{"text": "...narración...", "image": "prompt en inglés"}, ...]
 
@@ -183,6 +184,30 @@ def miniatura(img_path, texto, out):
     im.convert("RGB").save(out, quality=90)
 
 
+RATE = "+20%"  # velocidad de la voz (antes +8%)
+
+# Música de fondo generada aquí mismo (sin derechos de autor): un "pad" ambiental
+# de acordes con ondulación lenta. Cada canal tiene su ambiente.
+MUSICA = {
+    # La menor, grave e inquietante (historia oscura)
+    "oscura": [(55, .30, .07), (110, .22, .05), (130.81, .14, .03), (164.81, .14, .04), (220, .08, .06), (261.63, .05, .02)],
+    # Re mayor, cálido y épico (civilizaciones antiguas)
+    "epica": [(73.42, .28, .05), (110, .2, .04), (146.83, .16, .06), (185, .12, .03), (220, .1, .05), (293.66, .06, .02)],
+}
+
+
+def poner_musica(entrada, salida, mood="oscura", volumen=0.3):
+    """Mezcla la voz con un pad ambiental en bucle que entra y sale con fundido."""
+    d = duration(entrada)
+    expr = "+".join(f"{a}*sin(2*PI*{f}*t)*(0.55+0.45*sin(2*PI*{lfo}*t+{i}))"
+                    for i, (f, a, lfo) in enumerate(MUSICA.get(mood, MUSICA["oscura"])))
+    fg = (f"aevalsrc='{expr}':s=44100:d={d:.2f},aecho=0.8:0.6:700|1300:0.3|0.2,lowpass=f=1800,"
+          f"afade=t=in:d=2,afade=t=out:st={max(0, d - 2.5):.2f}:d=2.5,volume={volumen}[m];"
+          f"[0:a][m]amix=inputs=2:duration=first:normalize=0[a]")
+    run([FFMPEG, "-y", "-i", str(entrada), "-filter_complex", fg, "-map", "0:v", "-map", "[a]",
+         "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(salida)])
+
+
 def main(ep_path):
     ep = json.loads(Path(ep_path).read_text(encoding="utf-8"))
     formato = ep.get("formato", "vertical")
@@ -190,7 +215,7 @@ def main(ep_path):
     base = Path(__file__).resolve().parent / "salida" / ep["slug"]
     tmp = base / "_tmp"
     tmp.mkdir(parents=True, exist_ok=True)
-    voice, rate = ep.get("voice", "es-ES-AlvaroNeural"), ep.get("rate", "+8%")
+    voice, rate = ep.get("voice", "es-ES-AlvaroNeural"), ep.get("rate", RATE)
     style = ep.get("style", STYLE).replace(", vertical composition", "")
     segs = []
     for i, s in enumerate(ep["segments"]):
@@ -204,7 +229,10 @@ def main(ep_path):
     lst = tmp / "lista.txt"
     lst.write_text("".join(f"file '{p.resolve().as_posix()}'\n" for p in segs), encoding="utf-8")
     final = base / ("short.mp4" if formato == "vertical" else "video.mp4")
-    run([FFMPEG, "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", "-movflags", "+faststart", str(final)])
+    sin_musica = tmp / "sin_musica.mp4"
+    run([FFMPEG, "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", str(sin_musica)])
+    mood = ep.get("music", "epica" if "episodios_civ" in Path(ep_path).as_posix() else "oscura")
+    poner_musica(sin_musica, final, mood)
     (base / "guion.txt").write_text("\n\n".join(s["text"] for s in ep["segments"]), encoding="utf-8")
     (base / "metadata.txt").write_text(
         f"TÍTULO:\n{ep['title']}\n\nDESCRIPCIÓN:\n{ep['description']}\n\nETIQUETAS:\n{', '.join(ep['tags'])}\n",
