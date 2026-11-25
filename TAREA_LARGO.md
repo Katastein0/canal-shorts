@@ -4,8 +4,8 @@ Sirve para los dos canales. El prompt de la rutina te dice cuál te toca:
 
 | Canal | `--canal` | Carpeta de episodios | Variables | Voz | Tema |
 |---|---|---|---|---|---|
-| HistoriasDeCrónicasOscuras | *(nada)* | `episodios/` | `YT_*` | es-ES-AlvaroNeural | historia oscura, misterios y curiosidades históricas reales |
-| El Último Escriba | `civ` | `episodios_civ/` | `YT_CIV_*` | es-ES-ElviraNeural | civilizaciones antiguas |
+| Archivos Malditos | *(nada)* | `episodios/` | `YT_*` | es-ES-AlvaroNeural | historia oscura, misterios y curiosidades históricas reales |
+| Escribas del Tiempo | `civ` | `episodios_civ/` | `YT_CIV_*` | es-ES-ElviraNeural | civilizaciones antiguas |
 
 No toques nunca la carpeta ni las variables del otro canal.
 
