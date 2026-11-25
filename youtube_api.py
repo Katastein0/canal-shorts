@@ -67,6 +67,7 @@ def listar():
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")
     if len(sys.argv) >= 2 and sys.argv[1] == "listar":
         listar()
     elif len(sys.argv) == 3 and sys.argv[1] == "subir":
