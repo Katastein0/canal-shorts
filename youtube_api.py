@@ -5,7 +5,7 @@ Credenciales por variables de entorno (nunca en el repo):
   con --canal civ (civilizaciones):      YT_CIV_CLIENT_ID, YT_CIV_CLIENT_SECRET, YT_CIV_REFRESH_TOKEN
 
 Uso:
-  python youtube_api.py [--canal civ] subir salida/<slug>   # sube short.mp4 con la metadata del episodio
+  python youtube_api.py [--canal civ] subir salida/<slug>   # sube short.mp4 o video.mp4 (+miniatura.jpg) con la metadata del episodio
   python youtube_api.py [--canal civ] listar                # títulos ya publicados (para no repetir temas)
 
 El JSON del episodio se busca como <slug>.json en episodios/ o episodios_*/.
@@ -52,14 +52,24 @@ def subir(prefijo, carpeta):
                    "containsSyntheticMedia": True},
     }
     yt = client(prefijo)
-    media = MediaFileUpload(str(carpeta / "short.mp4"), mimetype="video/mp4", resumable=True)
+    largo = (carpeta / "video.mp4").exists()
+    archivo = carpeta / ("video.mp4" if largo else "short.mp4")
+    media = MediaFileUpload(str(archivo), mimetype="video/mp4", resumable=True)
     req = yt.videos().insert(part="snippet,status", body=body, media_body=media)
     resp = None
     while resp is None:
         _, resp = req.next_chunk()
     vid = resp["id"]
     estado = yt.videos().list(part="status", id=vid).execute()["items"][0]["status"]["privacyStatus"]
-    print(f"SUBIDO https://youtube.com/shorts/{vid}  visibilidad={estado}")
+    enlace = f"https://youtube.com/watch?v={vid}" if largo else f"https://youtube.com/shorts/{vid}"
+    print(f"SUBIDO {enlace}  visibilidad={estado}")
+    mini = carpeta / "miniatura.jpg"
+    if largo and mini.exists():
+        try:
+            yt.thumbnails().set(videoId=vid, media_body=MediaFileUpload(str(mini), mimetype="image/jpeg")).execute()
+            print("Miniatura puesta.")
+        except Exception as e:
+            print(f"AVISO: no se pudo poner la miniatura (¿canal sin verificar por teléfono?): {str(e)[:200]}")
     if estado != "public":
         print("AVISO: YouTube lo ha dejado en privado (proyecto de API sin auditar). Hay que hacerlo público a mano en Studio.")
 
