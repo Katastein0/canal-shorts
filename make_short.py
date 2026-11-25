@@ -17,10 +17,17 @@ import asyncio, json, os, re, subprocess, sys, time, urllib.parse, urllib.reques
 from pathlib import Path
 
 import edge_tts
+import edge_tts.communicate
 import imageio_ffmpeg
 from PIL import Image, ImageDraw, ImageFont
 
 FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()
+# En la nube el tráfico pasa por un proxy con su propio certificado: edge-tts no lo
+# lee por sí solo, así que le pasamos el proxy y el CA indicado en SSL_CERT_FILE.
+PROXY = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
+if os.environ.get("SSL_CERT_FILE") and os.path.exists(os.environ["SSL_CERT_FILE"]):
+    import ssl
+    edge_tts.communicate._SSL_CTX = ssl.create_default_context(cafile=os.environ["SSL_CERT_FILE"])
 FPS = 30
 FUENTES = [r"C:\Windows\Fonts\impact.ttf", r"C:\Windows\Fonts\arialbd.ttf",
            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -59,7 +66,7 @@ def duration(path):
 
 
 async def tts(text, voice, rate, out):
-    com = edge_tts.Communicate(text, voice, rate=rate, boundary="WordBoundary")
+    com = edge_tts.Communicate(text, voice, rate=rate, boundary="WordBoundary", proxy=PROXY)
     words = []
     with open(out, "wb") as f:
         async for ch in com.stream():
@@ -180,7 +187,7 @@ def main(ep_path):
     ep = json.loads(Path(ep_path).read_text(encoding="utf-8"))
     formato = ep.get("formato", "vertical")
     F = FORMATOS[formato]
-    base = Path(__file__).parent / "salida" / ep["slug"]
+    base = Path(__file__).resolve().parent / "salida" / ep["slug"]
     tmp = base / "_tmp"
     tmp.mkdir(parents=True, exist_ok=True)
     voice, rate = ep.get("voice", "es-ES-AlvaroNeural"), ep.get("rate", "+8%")
@@ -195,7 +202,7 @@ def main(ep_path):
             fetch_image(s["image"], 1000 + i, img, style, F)
         segs.append(build_segment(i, img, audio, words, tmp, F))
     lst = tmp / "lista.txt"
-    lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in segs), encoding="utf-8")
+    lst.write_text("".join(f"file '{p.resolve().as_posix()}'\n" for p in segs), encoding="utf-8")
     final = base / ("short.mp4" if formato == "vertical" else "video.mp4")
     run([FFMPEG, "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", "-movflags", "+faststart", str(final)])
     (base / "guion.txt").write_text("\n\n".join(s["text"] for s in ep["segments"]), encoding="utf-8")

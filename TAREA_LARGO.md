@@ -9,7 +9,7 @@ Sirve para los dos canales. El prompt de la rutina te dice cuál te toca:
 
 No toques nunca la carpeta ni las variables del otro canal.
 
-1. **Preparación.** Ejecuta `pip install -r requirements.txt` y comprueba que existen las 3 variables del canal, sin imprimir sus valores. Si falta alguna, para y avísalo. Si las conexiones HTTPS fallan por certificados, exporta `SSL_CERT_FILE` y `REQUESTS_CA_BUNDLE` con el CA bundle del proxy que indique el entorno.
+1. **Preparación.** Ejecuta `source preparar_nube.sh` (o repite su `export` de SSL_CERT_FILE y REQUESTS_CA_BUNDLE en cada comando), usa siempre `python`, y comprueba que existen las 3 variables del canal, sin imprimir sus valores. Si falta alguna, para y avísalo. Si las conexiones HTTPS fallan por certificados, exporta `SSL_CERT_FILE` y `REQUESTS_CA_BUNDLE` con el CA bundle del proxy que indique el entorno.
 2. **Qué hay ya.** Ejecuta `python youtube_api.py [--canal civ] listar` y lee la carpeta de episodios del canal. No repitas ningún tema ya publicado, ni en Short ni en vídeo largo.
 3. **Tema.** Usa WebSearch para ver qué vídeos largos del nicho funcionan ahora. Elige un tema real con más recorrido que un Short: una historia completa con contexto, desarrollo y desenlace. Contrasta los datos con al menos 2 fuentes fiables y marca lo dudoso como dudoso. Nada de pseudohistoria presentada como hecho.
 4. **Guion.**
