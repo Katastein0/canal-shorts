@@ -12,7 +12,8 @@ from pathlib import Path
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload",
-          "https://www.googleapis.com/auth/youtube.readonly"]
+          "https://www.googleapis.com/auth/youtube.readonly",
+          "https://www.googleapis.com/auth/youtube"]  # gestionar listas de reproducción
 
 canal = sys.argv[1].lower() if len(sys.argv) > 1 else ""
 prefijo = f"YT_{canal.upper()}_" if canal else "YT_"

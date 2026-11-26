@@ -29,7 +29,7 @@ def client(prefijo):
         sys.exit(f"Faltan variables de entorno: {', '.join(faltan)}")
     cid, secret, refresh = (os.environ[v] for v in nombres)
     creds = Credentials(None, refresh_token=refresh, client_id=cid, client_secret=secret,
-                        token_uri="https://oauth2.googleapis.com/token", scopes=SCOPES)
+                        token_uri="https://oauth2.googleapis.com/token")
     return build("youtube", "v3", credentials=creds, cache_discovery=False)
 
 
@@ -70,8 +70,34 @@ def subir(prefijo, carpeta):
             print("Miniatura puesta.")
         except Exception as e:
             print(f"AVISO: no se pudo poner la miniatura (¿canal sin verificar por teléfono?): {str(e)[:200]}")
+    if ep.get("playlist"):
+        a_lista(yt, vid, ep["playlist"])
     if estado != "public":
         print("AVISO: YouTube lo ha dejado en privado (proyecto de API sin auditar). Hay que hacerlo público a mano en Studio.")
+
+
+def a_lista(yt, vid, nombre):
+    """Añade el vídeo a la lista temática `nombre`, creándola si no existe.
+    Necesita el permiso completo de YouTube (obtener_token.py lo pide desde ahora)."""
+    try:
+        listas, token = [], None
+        while True:
+            r = yt.playlists().list(part="snippet", mine=True, maxResults=50, pageToken=token).execute()
+            listas += r["items"]
+            token = r.get("nextPageToken")
+            if not token:
+                break
+        lid = next((l["id"] for l in listas if l["snippet"]["title"].strip().lower() == nombre.strip().lower()), None)
+        if not lid:
+            lid = yt.playlists().insert(part="snippet,status", body={
+                "snippet": {"title": nombre, "defaultLanguage": "es"},
+                "status": {"privacyStatus": "public"}}).execute()["id"]
+            print(f"Lista creada: {nombre}")
+        yt.playlistItems().insert(part="snippet", body={"snippet": {
+            "playlistId": lid, "resourceId": {"kind": "youtube#video", "videoId": vid}}}).execute()
+        print(f"Añadido a la lista: {nombre}")
+    except Exception as e:
+        print(f"AVISO: no se pudo añadir a la lista '{nombre}' (¿falta repetir obtener_token.py con el permiso nuevo?): {str(e)[:160]}")
 
 
 def listar(prefijo):

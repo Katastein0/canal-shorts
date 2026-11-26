@@ -1,5 +1,7 @@
 # Tarea en la nube: crear y subir 1 Short de "Historia oscura"
 
+> **Antes de escribir el guion, lee y cumple `GUIA_CONTENIDO.md`** (gancho, `hook_text`, pregunta final, título y `playlist`).
+
 Esta tarea se ejecuta en un agente en la nube, 2 veces al día (además hay 1 vídeo largo diario, ver TAREA_LARGO.md). En cada ejecución se crea y se sube UN Short. Si las conexiones HTTPS fallan por certificados, exporta SSL_CERT_FILE y REQUESTS_CA_BUNDLE con el CA bundle del proxy que indique el entorno.
 
 1. **Preparación.** Ejecuta `source preparar_nube.sh` (en el mismo comando que los siguientes, o vuelve a hacer `export` de SSL_CERT_FILE y REQUESTS_CA_BUNDLE en cada comando) y usa siempre `python`. Comprueba que existen YT_CLIENT_ID, YT_CLIENT_SECRET y YT_REFRESH_TOKEN, sin imprimir sus valores. Si falta alguna, para y avísalo.

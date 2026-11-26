@@ -1,5 +1,7 @@
 # Tarea en la nube: 1 vídeo LARGO horizontal (16:9)
 
+> **Antes de escribir el guion, lee y cumple `GUIA_CONTENIDO.md`** (gancho, `hook_text`, pregunta final, título y `playlist`).
+
 Sirve para los dos canales. El prompt de la rutina te dice cuál te toca:
 
 | Canal | `--canal` | Carpeta de episodios | Variables | Voz | Tema |

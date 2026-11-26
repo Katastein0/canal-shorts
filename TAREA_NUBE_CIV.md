@@ -1,5 +1,7 @@
 # Tarea en la nube: 1 Short del canal de CIVILIZACIONES ANTIGUAS (Escribas del Tiempo), 2 veces al día
 
+> **Antes de escribir el guion, lee y cumple `GUIA_CONTENIDO.md`** (gancho, `hook_text`, pregunta final, título y `playlist`).
+
 Este es un canal **distinto** del de historia oscura. Usa siempre `--canal civ`, la carpeta `episodios_civ/` y las variables YT_CIV_*. No toques nada del otro canal: ni `episodios/` ni las variables YT_* sin prefijo.
 
 1. **Preparación.** Ejecuta `source preparar_nube.sh` (en el mismo comando que los siguientes, o vuelve a hacer `export` de SSL_CERT_FILE y REQUESTS_CA_BUNDLE en cada comando) y usa siempre `python`. Comprueba que existen YT_CIV_CLIENT_ID, YT_CIV_CLIENT_SECRET y YT_CIV_REFRESH_TOKEN, sin imprimir sus valores. Si falta alguna, para y avísalo.

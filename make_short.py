@@ -5,6 +5,8 @@ Uso:  python make_short.py episodios/2026-11-25-slug.json
 El JSON tiene: slug, title, description, tags, segments y, opcionales:
   formato  "vertical" (por defecto, Short) u "horizontal" (vídeo largo 16:9)
   voice, rate, style   (voz edge-tts, velocidad [por defecto +20%], estilo de imagen)
+  hook_text            título fijo arriba en los Shorts (pregunta corta e impactante)
+  playlist             nombre de la lista de reproducción temática
   music                "oscura" o "epica" (por defecto epica en episodios_civ/, si no oscura)
   thumb_text           texto grande de la miniatura (solo horizontal)
 "segments": [{"text": "...narración...", "image": "prompt en inglés"}, ...]
@@ -110,6 +112,35 @@ def caption_png(text, out, F):
     img.save(out)
 
 
+def banner_png(text, out, W):
+    """Título fijo arriba en los Shorts: 1-2 líneas sobre una franja oscura semitransparente."""
+    size, palabras = 76, text.upper().split()
+    d = ImageDraw.Draw(Image.new("RGBA", (W, 10)))
+    while True:
+        font = fuente(size)
+        lineas, cur = [], ""
+        for p in palabras:
+            prueba = f"{cur} {p}".strip()
+            if d.textlength(prueba, font=font) <= W - 140:
+                cur = prueba
+            else:
+                lineas.append(cur)
+                cur = p
+        lineas.append(cur)
+        if len(lineas) <= 2 or size <= 44:
+            break
+        size -= 6
+    alto = int(len(lineas) * size * 1.2 + 60)
+    img = Image.new("RGBA", (W, alto), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((40, 0, W - 40, alto), radius=28, fill=(0, 0, 0, 150))
+    for k, l in enumerate(lineas):
+        tw = d.textlength(l, font=font)
+        d.text(((W - tw) / 2, 30 + k * size * 1.2), l, font=font, fill=(255, 255, 255),
+               stroke_width=max(3, size // 14), stroke_fill=(0, 0, 0))
+    img.save(out)
+
+
 def chunk_words(words, n):
     chunks, cur = [], []
     for w in words:
@@ -122,7 +153,7 @@ def chunk_words(words, n):
     return [(c[0][0], c[-1][1], " ".join(x[2] for x in c).upper()) for c in chunks]
 
 
-def build_segment(i, img, audio, words, tmp, F):
+def build_segment(i, img, audio, words, tmp, F, banner=None):
     W, H = F["W"], F["H"]
     dur = duration(audio) + 0.25
     frames = int(dur * FPS) + 1
@@ -141,6 +172,10 @@ def build_segment(i, img, audio, words, tmp, F):
     for j, (a, b, _) in enumerate(caps):
         fg += f";[{last}][{j+2}:v]overlay=0:{F['cap_y']}:enable='between(t,{a:.2f},{b+0.05:.2f})'[v{j+1}]"
         last = f"v{j+1}"
+    if banner:
+        inputs += ["-i", str(banner)]
+        fg += f";[{last}][{len(caps)+2}:v]overlay=0:170[vb]"
+        last = "vb"
     out = tmp / f"seg_{i:02d}.mp4"
     run([FFMPEG, "-y", *inputs, "-filter_complex", fg, "-map", f"[{last}]", "-map", "1:a",
          "-t", f"{dur:.2f}", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
@@ -218,6 +253,10 @@ def main(ep_path):
     voice, rate = ep.get("voice", "es-ES-AlvaroNeural"), ep.get("rate", RATE)
     style = ep.get("style", STYLE).replace(", vertical composition", "")
     segs = []
+    banner = None
+    if formato == "vertical" and ep.get("hook_text"):
+        banner = tmp / "titulo_fijo.png"
+        banner_png(ep["hook_text"], banner, F["W"])
     for i, s in enumerate(ep["segments"]):
         print(f"[{i+1}/{len(ep['segments'])}] voz + imagen", flush=True)
         audio = tmp / f"voz_{i:02d}.mp3"
@@ -225,7 +264,7 @@ def main(ep_path):
         img = tmp / f"img_{i:02d}.jpg"
         if not img.exists():
             fetch_image(s["image"], 1000 + i, img, style, F)
-        segs.append(build_segment(i, img, audio, words, tmp, F))
+        segs.append(build_segment(i, img, audio, words, tmp, F, banner))
     lst = tmp / "lista.txt"
     lst.write_text("".join(f"file '{p.resolve().as_posix()}'\n" for p in segs), encoding="utf-8")
     final = base / ("short.mp4" if formato == "vertical" else "video.mp4")

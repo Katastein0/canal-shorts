@@ -1,5 +1,7 @@
 # Tarea diaria: un Short nuevo de "Historia oscura" (español)
 
+> **Antes de escribir el guion, lee y cumple `GUIA_CONTENIDO.md`** (gancho, `hook_text`, pregunta final, título y `playlist`).
+
 Nicho del canal: historia oscura, misterios y curiosidades históricas reales. Shorts verticales de 40-55 s, voz en español de España (es-ES-AlvaroNeural).
 
 ## Pasos
