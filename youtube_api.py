@@ -10,7 +10,7 @@ Uso:
 
 El JSON del episodio se busca como <slug>.json en episodios/ o episodios_*/.
 """
-import json, os, sys
+import json, os, sys, time
 from pathlib import Path
 
 from google.oauth2.credentials import Credentials
@@ -93,11 +93,21 @@ def a_lista(yt, vid, nombre):
                 "snippet": {"title": nombre, "defaultLanguage": "es"},
                 "status": {"privacyStatus": "public"}}).execute()["id"]
             print(f"Lista creada: {nombre}")
-        yt.playlistItems().insert(part="snippet", body={"snippet": {
-            "playlistId": lid, "resourceId": {"kind": "youtube#video", "videoId": vid}}}).execute()
-        print(f"Añadido a la lista: {nombre}")
+        # YouTube devuelve a veces 409/5xx justo después de subir el vídeo o crear la lista:
+        # reintentamos con espera creciente.
+        for intento in range(6):
+            try:
+                yt.playlistItems().insert(part="snippet", body={"snippet": {
+                    "playlistId": lid, "resourceId": {"kind": "youtube#video", "videoId": vid}}}).execute()
+                print(f"Añadido a la lista: {nombre}")
+                return
+            except Exception as e:
+                codigo = getattr(getattr(e, "resp", None), "status", None)
+                if codigo not in (409, 500, 503) or intento == 5:
+                    raise
+                time.sleep(20 * (intento + 1))
     except Exception as e:
-        print(f"AVISO: no se pudo añadir a la lista '{nombre}' (¿falta repetir obtener_token.py con el permiso nuevo?): {str(e)[:160]}")
+        print(f"AVISO: no se pudo añadir a la lista '{nombre}' : {str(e)[:160]}")
 
 
 def listar(prefijo):
