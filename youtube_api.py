@@ -7,6 +7,7 @@ Credenciales por variables de entorno (nunca en el repo):
 Uso:
   python youtube_api.py [--canal civ] subir salida/<slug>   # sube short.mp4 o video.mp4 (+miniatura.jpg) con la metadata del episodio
   python youtube_api.py [--canal civ] listar                # títulos ya publicados (para no repetir temas)
+  python youtube_api.py [--canal civ] ranking               # vídeos ordenados por visitas y me gusta
 
 El JSON del episodio se busca como <slug>.json en episodios/ o episodios_*/.
 """
@@ -125,6 +126,34 @@ def listar(prefijo):
             break
 
 
+def ranking(prefijo):
+    """Vídeos del canal ordenados por visualizaciones, con me gusta y tipo (Short o largo).
+    Sirve para copiar lo que funciona: temas, títulos y ganchos de los de arriba."""
+    yt = client(prefijo)
+    ch = yt.channels().list(part="snippet,contentDetails,statistics", mine=True).execute()["items"][0]
+    uploads = ch["contentDetails"]["relatedPlaylists"]["uploads"]
+    ids, token = [], None
+    while True:
+        r = yt.playlistItems().list(part="contentDetails", playlistId=uploads, maxResults=50, pageToken=token).execute()
+        ids += [it["contentDetails"]["videoId"] for it in r["items"]]
+        token = r.get("nextPageToken")
+        if not token:
+            break
+    filas = []
+    for i in range(0, len(ids), 50):
+        r = yt.videos().list(part="snippet,statistics", id=",".join(ids[i:i + 50])).execute()
+        for v in r["items"]:
+            tipo = "SHORT" if "#shorts" in v["snippet"]["title"].lower() else "LARGO"
+            st = v["statistics"]
+            filas.append((int(st.get("viewCount", 0)), int(st.get("likeCount", 0)), tipo,
+                          v["snippet"]["publishedAt"][:10], v["snippet"]["title"]))
+    filas.sort(reverse=True)
+    print(f"# Canal: {ch['snippet']['title']} | suscriptores: {ch['statistics'].get('subscriberCount')}")
+    print("visitas | me gusta | tipo | fecha | título")
+    for vis, lk, tipo, fecha, titulo in filas:
+        print(f"{vis:>7} | {lk:>4} | {tipo:<5} | {fecha} | {titulo}")
+
+
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
     args = sys.argv[1:]
@@ -134,6 +163,8 @@ if __name__ == "__main__":
         args = args[2:]
     if args[:1] == ["listar"]:
         listar(prefijo)
+    elif args[:1] == ["ranking"]:
+        ranking(prefijo)
     elif len(args) == 2 and args[0] == "subir":
         subir(prefijo, args[1])
     else:

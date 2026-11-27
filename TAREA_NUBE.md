@@ -1,6 +1,6 @@
 # Tarea en la nube: crear y subir 1 Short de "Historia oscura"
 
-> **Antes de escribir el guion, lee y cumple `GUIA_CONTENIDO.md`** (gancho, `hook_text`, pregunta final, título y `playlist`).
+> **Antes de elegir tema, ejecuta `python youtube_api.py [--canal civ] ranking` y lee y cumple `GUIA_CONTENIDO.md`**: el vídeo nuevo debe imitar el tipo de tema, el título y el gancho de los 3 Shorts con más visitas del canal. Cumple también el gancho, `hook_text`, pregunta final y `playlist`.
 
 Esta tarea se ejecuta en un agente en la nube, 2 veces al día (además hay 1 vídeo largo diario, ver TAREA_LARGO.md). En cada ejecución se crea y se sube UN Short. Si las conexiones HTTPS fallan por certificados, exporta SSL_CERT_FILE y REQUESTS_CA_BUNDLE con el CA bundle del proxy que indique el entorno.
 

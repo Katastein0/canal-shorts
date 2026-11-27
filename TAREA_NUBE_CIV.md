@@ -1,6 +1,6 @@
 # Tarea en la nube: 1 Short del canal de CIVILIZACIONES ANTIGUAS (Escribas del Tiempo), 2 veces al día
 
-> **Antes de escribir el guion, lee y cumple `GUIA_CONTENIDO.md`** (gancho, `hook_text`, pregunta final, título y `playlist`).
+> **Antes de elegir tema, ejecuta `python youtube_api.py [--canal civ] ranking` y lee y cumple `GUIA_CONTENIDO.md`**: el vídeo nuevo debe imitar el tipo de tema, el título y el gancho de los 3 Shorts con más visitas del canal. Cumple también el gancho, `hook_text`, pregunta final y `playlist`.
 
 Este es un canal **distinto** del de historia oscura. Usa siempre `--canal civ`, la carpeta `episodios_civ/` y las variables YT_CIV_*. No toques nada del otro canal: ni `episodios/` ni las variables YT_* sin prefijo.
 

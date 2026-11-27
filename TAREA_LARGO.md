@@ -1,6 +1,6 @@
 # Tarea en la nube: 1 vídeo LARGO horizontal (16:9)
 
-> **Antes de escribir el guion, lee y cumple `GUIA_CONTENIDO.md`** (gancho, `hook_text`, pregunta final, título y `playlist`).
+> **Antes de elegir tema, ejecuta `python youtube_api.py [--canal civ] ranking` y lee y cumple `GUIA_CONTENIDO.md`**: el vídeo nuevo debe imitar el tipo de tema, el título y el gancho de los 3 Shorts con más visitas del canal. Cumple también el gancho, `hook_text`, pregunta final y `playlist`.
 
 Sirve para los dos canales. El prompt de la rutina te dice cuál te toca:
 
